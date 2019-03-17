@@ -16,7 +16,7 @@ public class Play extends PlayAudioEventHandler {
 
     @Override
     protected String getUrl(MessageReceivedEvent event, String[] args) {
-        if (args.length <= 1) {
+        if (args.length < 2) {
             return null;
         }
         return String.join("", Arrays.copyOfRange(args, 1, args.length));

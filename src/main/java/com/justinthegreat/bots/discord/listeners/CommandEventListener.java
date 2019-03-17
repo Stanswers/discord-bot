@@ -5,13 +5,14 @@ import com.justinthegreat.bots.discord.command.CommandEventHandler;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class CommandEventListener extends EventListener {
     private Map<String, CommandEventHandler> commandEventHandlers = new HashMap<>();
     private String help;
 
-    public CommandEventListener(CommandEventHandler ... eventHandler) {
+    public CommandEventListener(CommandEventHandler... eventHandler) {
         // TODO: improve help formatting
         StringBuilder sb = new StringBuilder("Available Commands:\n `help`, ");
         for (CommandEventHandler handler : eventHandler) {

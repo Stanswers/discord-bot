@@ -1,4 +1,4 @@
-package com.justinthegreat.bots.discord.handlers;
+package com.justinthegreat.bots.discord.audio;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;

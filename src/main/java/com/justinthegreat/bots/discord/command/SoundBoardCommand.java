@@ -4,28 +4,32 @@ import com.justinthegreat.bots.discord.BotRuntime;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 import java.io.File;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SoundBoardCommand implements CommandEventHandler {
-    private Map<String, SoundBoard> nameToSoundBoard = new HashMap<>();
-    private Map<String, SoundBoard> aliasToSoundBoard = new HashMap<>();
+    private Map<String, SoundBoard> longNameToSoundBoard = new HashMap<>();
+    private Map<String, SoundBoard> shortNameToSoundBoard = new HashMap<>();
 
-    public SoundBoardCommand(String ... paths) {
-        for (String path : paths) {
-            File dir = new File(path);
-            if (dir.isDirectory()) {
-                String longName = dir.getName();
-                String shortName = longName;
-                for(int i = 1; i < longName.length(); i++) {
-                    shortName = longName.substring(0, i);
-                    if (aliasToSoundBoard.get(shortName) == null) {
-                        break;
+    public SoundBoardCommand(String path) {
+        File sbDir = new File(path);
+        if (sbDir.isDirectory()) {
+            for (File dir : sbDir.listFiles()) {
+                if (dir.isDirectory()) {
+                    String longName = dir.getName();
+                    String shortName = longName;
+                    for (int i = 1; i < longName.length(); i++) {
+                        shortName = longName.substring(0, i);
+                        if (shortNameToSoundBoard.get(shortName) == null) {
+                            break;
+                        }
                     }
-                }
-                SoundBoard sb = new SoundBoard(longName, shortName, dir.listFiles());
-                nameToSoundBoard.put(longName, sb);
-                if (!longName.equals(shortName)) {
-                    aliasToSoundBoard.put(shortName, sb);
+                    SoundBoard sb = SoundBoard.newInstance(longName, shortName, dir.listFiles());
+                    longNameToSoundBoard.put(longName, sb);
+                    if (!longName.equals(shortName)) {
+                        shortNameToSoundBoard.put(shortName, sb);
+                    }
                 }
             }
         }
@@ -48,20 +52,19 @@ public class SoundBoardCommand implements CommandEventHandler {
             return;
         }
         if ("help".equals(args[1])) {
-            // TODO: Help menu
             event.getChannel().sendMessage("```sb [help|list|<soundboard>] list|<sound>```").queue();
             return;
         }
         if ("list".equals(args[1])) {
-            event.getChannel().sendMessage("Available soundboards:\n```" + Arrays.toString(nameToSoundBoard.keySet().toArray()) + "```").queue();
+            event.getChannel().sendMessage("Available soundboards:\n```" + Arrays.toString(longNameToSoundBoard.keySet().toArray()) + "```").queue();
             return;
         }
-        SoundBoard soundBoard = nameToSoundBoard.get(args[1]);
+        SoundBoard soundBoard = longNameToSoundBoard.get(args[1]);
         if (soundBoard != null) {
             soundBoard.handleEvent(event, Arrays.copyOfRange(args, 1, args.length));
             return;
         }
-        soundBoard = aliasToSoundBoard.get(args[1]);
+        soundBoard = shortNameToSoundBoard.get(args[1]);
         if (soundBoard != null) {
             soundBoard.handleEvent(event, Arrays.copyOfRange(args, 1, args.length));
             return;
