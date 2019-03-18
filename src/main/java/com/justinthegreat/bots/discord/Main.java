@@ -3,7 +3,7 @@ package com.justinthegreat.bots.discord;
 import com.justinthegreat.bots.discord.command.KillDashNine;
 import com.justinthegreat.bots.discord.command.Pause;
 import com.justinthegreat.bots.discord.command.Play;
-import com.justinthegreat.bots.discord.command.SoundBoardCommand;
+import com.justinthegreat.bots.discord.command.SoundBoard;
 import com.justinthegreat.bots.discord.command.Stop;
 import com.justinthegreat.bots.discord.listeners.CommandEventListener;
 import com.justinthegreat.bots.discord.listeners.MessageReceivedEventLogger;
@@ -22,7 +22,7 @@ public class Main {
         }
         try {
             JDABuilder builder = new JDABuilder(args[0]);
-            builder.addEventListener(new CommandEventListener(new SoundBoardCommand(args[1]), new KillDashNine(), new Play(), new Pause(), new Stop()));
+            builder.addEventListener(new CommandEventListener(new SoundBoard(args[1]), new KillDashNine(), new Play(), new Pause(), new Stop()));
             builder.addEventListener(new TrollGeorge());
             builder.addEventListener(new MessageReceivedEventLogger());
             builder.build().awaitReady();
