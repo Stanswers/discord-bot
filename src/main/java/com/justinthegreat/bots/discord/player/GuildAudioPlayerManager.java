@@ -4,17 +4,20 @@ import com.justinthegreat.bots.discord.audio.AudioSendHandlerImpl;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
-import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
+import com.sedmelluq.lava.common.tools.DaemonThreadFactory;
+import com.sedmelluq.lava.common.tools.ExecutorTools;
 import gnu.trove.map.hash.TLongObjectHashMap;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.VoiceChannel;
 import net.dv8tion.jda.core.managers.AudioManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -23,61 +26,37 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class GuildAudioPlayerManager extends DefaultAudioPlayerManager {
     private static final long CHECK_INTERVAL = TimeUnit.SECONDS.toMillis(10);
-    private static final int DEFAULT_CLEANUP_THRESHOLD = (int) TimeUnit.SECONDS.toMillis(30);
+    private static final long DEFAULT_CLEANUP_THRESHOLD = TimeUnit.SECONDS.toMillis(30);
 
-    // private final Logger logger = LoggerFactory.getLogger(GuildAudioPlayerManager.class);
-    // private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1, new DaemonThreadFactory("manager"));
-    // private final AudioPlayerLifecycleManager lifecycleManager = new AudioPlayerLifecycleManager(scheduledExecutorService);
+    private final Logger logger = LoggerFactory.getLogger(GuildAudioPlayerManager.class);
+    private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1, new DaemonThreadFactory("manager"));
+    private final AudioPlayerLifecycleManager lifecycleManager = new AudioPlayerLifecycleManager(scheduledExecutorService);
 
-    private TLongObjectHashMap<AudioPlayer> players = new TLongObjectHashMap<>();
+    private TLongObjectHashMap<GuildAudioPlayer> players = new TLongObjectHashMap<>();
 
     public GuildAudioPlayerManager() {
-        // lifecycleManager.initialise();
+        super();
+        lifecycleManager.initialise();
     }
 
     @Override
     public void shutdown() {
-        // lifecycleManager.shutdown();
-        // ExecutorTools.shutdownExecutor(scheduledExecutorService, "scheduled operations");
+        super.shutdown();
+        lifecycleManager.shutdown();
+        ExecutorTools.shutdownExecutor(scheduledExecutorService, "scheduled operations");
     }
 
-    public AudioPlayer getAudioPlayer(Guild guild) {
-        AudioPlayer player;
+    public GuildAudioPlayer getAudioPlayer(Guild guild) {
+        GuildAudioPlayer player;
         synchronized (players) {
             player = players.get(guild.getIdLong());
             if (player != null) {
                 return player;
             }
-            player = createPlayer();
+            player = new GuildAudioPlayer(createPlayer(), guild);
             players.put(guild.getIdLong(), player);
         }
-        AudioManager manager = guild.getAudioManager();
-        player.addListener(new AudioEventAdapter() {
-            @Override
-            public void onTrackStuck(AudioPlayer player, AudioTrack track, long thresholdMs) {
-                player.stopTrack();
-                if (manager != null && manager.getConnectedChannel() != null) {
-                    manager.closeAudioConnection();
-                }
-            }
-
-            @Override
-            public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
-                switch (endReason) {
-                    case STOPPED:
-                    case FINISHED:
-                    case CLEANUP:
-                        if (manager != null && manager.getConnectedChannel() != null) {
-                            manager.closeAudioConnection();
-                        }
-                        break;
-                    case LOAD_FAILED:
-                    case REPLACED:
-                    default:
-                        break;
-                }
-            }
-        });
+        // player.addListener(new AudioEventAdapter() {});
         return player;
     }
 
@@ -140,10 +119,8 @@ public class GuildAudioPlayerManager extends DefaultAudioPlayerManager {
         @Override
         public void run() {
             synchronized (players) {
-                for (AudioPlayer player : players.valueCollection()) {
-                    // TODO: checkCleanUp doesn't do what I wan't it todo.  Have to write a wrapper around the
-                    //       AudioPlayer to keep track of last send time, so I can disconnect from channel if player is idle
-                    player.checkCleanup(DEFAULT_CLEANUP_THRESHOLD);
+                for (GuildAudioPlayer player : players.valueCollection()) {
+                    player.checkIdle(DEFAULT_CLEANUP_THRESHOLD);
                 }
             }
         }

@@ -1,7 +1,7 @@
 package com.justinthegreat.bots.discord;
 
+import com.justinthegreat.bots.discord.player.GuildAudioPlayer;
 import com.justinthegreat.bots.discord.player.GuildAudioPlayerManager;
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.source.local.LocalAudioSourceManager;
 import net.dv8tion.jda.core.entities.Guild;
@@ -34,7 +34,7 @@ public class BotRuntime {
         this.prefix = prefix;
     }
 
-    public AudioPlayer getAudioPlayer(Guild guild) {
+    public GuildAudioPlayer getAudioPlayer(Guild guild) {
         return AUDIO_PLAYER_MANAGER.getAudioPlayer(guild);
     }
 

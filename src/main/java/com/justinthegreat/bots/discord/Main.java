@@ -3,9 +3,10 @@ package com.justinthegreat.bots.discord;
 import com.justinthegreat.bots.discord.command.KillDashNine;
 import com.justinthegreat.bots.discord.command.Pause;
 import com.justinthegreat.bots.discord.command.Play;
-import com.justinthegreat.bots.discord.command.SoundBoard;
+import com.justinthegreat.bots.discord.command.SoundBoardCommand;
 import com.justinthegreat.bots.discord.command.Stop;
 import com.justinthegreat.bots.discord.listeners.CommandEventListener;
+import com.justinthegreat.bots.discord.listeners.KillAllHumans;
 import com.justinthegreat.bots.discord.listeners.MessageReceivedEventLogger;
 import com.justinthegreat.bots.discord.listeners.TrollGeorge;
 import net.dv8tion.jda.core.JDABuilder;
@@ -22,7 +23,9 @@ public class Main {
         }
         try {
             JDABuilder builder = new JDABuilder(args[0]);
-            builder.addEventListener(new CommandEventListener(new SoundBoard(args[1]), new KillDashNine(), new Play(), new Pause(), new Stop()));
+            SoundBoard sb = new SoundBoard(args[1]);
+            builder.addEventListener(new CommandEventListener(new SoundBoardCommand(sb), new KillDashNine(), new Play(), new Pause(), new Stop()));
+            builder.addEventListener(new KillAllHumans(sb));
             builder.addEventListener(new TrollGeorge());
             builder.addEventListener(new MessageReceivedEventLogger());
             builder.build().awaitReady();

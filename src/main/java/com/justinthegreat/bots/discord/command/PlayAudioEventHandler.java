@@ -1,7 +1,7 @@
 package com.justinthegreat.bots.discord.command;
 
 import com.justinthegreat.bots.discord.BotRuntime;
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
+import com.justinthegreat.bots.discord.player.GuildAudioPlayer;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.MessageChannel;
@@ -31,13 +31,13 @@ public abstract class PlayAudioEventHandler implements CommandEventHandler {
         if (manager == null) {
             return;
         }
-        AudioPlayer player = BotRuntime.getInstance().getAudioPlayer(guild);
+        GuildAudioPlayer player = BotRuntime.getInstance().getAudioPlayer(guild);
+        VoiceChannel voiceChannel = member.getVoiceState().getChannel();
         if (args.length == 1 && player.isPaused()) {
-            player.setPaused(false);
+            player.unPause(voiceChannel);
             return;
         }
         MessageChannel channel = event.getChannel();
-        VoiceChannel voiceChannel = member.getVoiceState().getChannel();
         if (voiceChannel == null) {
             channel.sendMessage("Connect to a voice channel first!!!").queue();
             return;
