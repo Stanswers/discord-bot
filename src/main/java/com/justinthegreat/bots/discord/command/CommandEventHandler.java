@@ -8,4 +8,6 @@ public interface CommandEventHandler {
     String getShortName();
 
     void handleEvent(MessageReceivedEvent event, String[] args);
+
+    boolean handleHelpEvent(MessageReceivedEvent event, String[] args);
 }

@@ -2,18 +2,24 @@ package com.justinthegreat.bots.discord.player;
 
 import com.sedmelluq.discord.lavaplayer.filter.PcmFilterFactory;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
+import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;
 import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.VoiceChannel;
 import net.dv8tion.jda.core.managers.AudioManager;
 
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class GuildAudioPlayer implements AudioPlayer {
+    private final BlockingQueue<AudioTrack> queue = new LinkedBlockingQueue<>();
+    private final AudioSendHandlerImpl sendHandler = new AudioSendHandlerImpl(this);
     private final AudioPlayer player;
     private final Guild guild;
     private long lastFrameProvidedTime = System.currentTimeMillis();
@@ -21,6 +27,38 @@ public class GuildAudioPlayer implements AudioPlayer {
     public GuildAudioPlayer(AudioPlayer player, Guild guild) {
         this.player = player;
         this.guild = guild;
+        this.addListener(new AudioEventAdapter() {
+            @Override
+            public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
+                if (endReason.mayStartNext) {
+                    next();
+                }
+            }
+        });
+    }
+
+    public boolean next() {
+        if (!queue.isEmpty()) {
+            player.startTrack(queue.poll(), false);
+            return true;
+        }
+        return false;
+    }
+
+    public void trackLoaded(AudioTrack track, VoiceChannel voiceChannel) {
+        AudioManager manager = guild.getAudioManager();
+        if (manager == null) {
+            return;
+        }
+        if (manager.getSendingHandler() == null) {
+            manager.setSendingHandler(sendHandler);
+        }
+        if (manager.getConnectedChannel() == null || manager.getConnectedChannel().getIdLong() != voiceChannel.getIdLong()) {
+            manager.openAudioConnection(voiceChannel);
+        }
+        if (!player.startTrack(track, true)) {
+            queue.offer(track);
+        }
     }
 
     public void checkIdle(long threshold) {
@@ -30,12 +68,14 @@ public class GuildAudioPlayer implements AudioPlayer {
         }
     }
 
-    public void unPause(VoiceChannel channel) {
+    public void setPaused(boolean value, VoiceChannel channel) {
         AudioManager manager = guild.getAudioManager();
-        if (channel != null && player.isPaused() && manager != null && !manager.isConnected()) {
-            manager.openAudioConnection(channel);
+        if (!value && player.getPlayingTrack() != null && channel != null && manager != null) {
+            if (!manager.isConnected() || manager.getConnectedChannel().getIdLong() != channel.getIdLong()) {
+                manager.openAudioConnection(channel);
+            }
         }
-        player.setPaused(false);
+        player.setPaused(value);
     }
 
     @Override
@@ -91,6 +131,7 @@ public class GuildAudioPlayer implements AudioPlayer {
 
     @Override
     public void stopTrack() {
+        queue.clear();
         player.stopTrack();
     }
 

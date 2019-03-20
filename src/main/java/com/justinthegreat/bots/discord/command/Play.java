@@ -6,9 +6,9 @@ import java.util.Arrays;
 
 public class Play extends PlayAudioEventHandler {
     @Override
-    protected boolean handleNonAudioEvent(MessageReceivedEvent event, String[] args) {
-        if (args.length > 1 && "help".equals(args[1])) {
-            event.getChannel().sendMessage("```p [help|<song>]```").queue();
+    public boolean handleHelpEvent(MessageReceivedEvent event, String[] args) {
+        if ("help".equals(args[1])) {
+            event.getChannel().sendMessage("```" + CommandEventListener.PREFIX + "p [help|<song>]```").queue();
             return true;
         }
         return false;

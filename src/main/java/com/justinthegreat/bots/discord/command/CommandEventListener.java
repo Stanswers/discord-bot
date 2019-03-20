@@ -1,7 +1,6 @@
-package com.justinthegreat.bots.discord.listeners;
+package com.justinthegreat.bots.discord.command;
 
-import com.justinthegreat.bots.discord.BotRuntime;
-import com.justinthegreat.bots.discord.command.CommandEventHandler;
+import com.justinthegreat.bots.discord.listeners.EventListener;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import org.apache.commons.lang3.StringUtils;
 
@@ -9,6 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CommandEventListener extends EventListener {
+    public static final String PREFIX = "-";
+
     private Map<String, CommandEventHandler> commandEventHandlers = new HashMap<>();
     private String help;
 
@@ -27,23 +28,25 @@ public class CommandEventListener extends EventListener {
     @Override
     protected void handleEvent(MessageReceivedEvent event) {
         String message = event.getMessage().getContentDisplay();
-        String prefix = BotRuntime.getInstance().getPrefix();
-        if (!message.startsWith(prefix)) {
+        if (!message.startsWith(PREFIX)) {
             return;
         }
-        String argsStr = message.substring(prefix.length());
+        String argsStr = message.substring(PREFIX.length());
         if (StringUtils.isBlank(argsStr)) {
             // Probably just the prefix or the prefix followed by ws
             return;
         }
         String[] args = argsStr.split(" ");
-        if (args.length >= 1 && "help".equals(args[0])) {
+        if ("help".equals(args[0])) {
             event.getChannel().sendMessage(help).queue();
             return;
         }
         CommandEventHandler command = commandEventHandlers.get(args[0]);
         if (command == null) {
-            event.getChannel().sendMessage("Unknown command try `" + BotRuntime.getInstance().getPrefix() + "help` for more info").queue();
+            event.getChannel().sendMessage("Unknown command try `" + PREFIX + "help` for more info").queue();
+            return;
+        }
+        if (args.length > 1 && command.handleHelpEvent(event, args)) {
             return;
         }
         command.handleEvent(event, args);

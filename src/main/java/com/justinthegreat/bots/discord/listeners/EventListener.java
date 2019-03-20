@@ -7,9 +7,6 @@ import org.apache.commons.lang3.StringUtils;
 
 public abstract class EventListener extends ListenerAdapter {
 
-    public EventListener() {
-    }
-
     protected void handleEvent(MessageReceivedEvent event) {
     }
 
@@ -17,7 +14,7 @@ public abstract class EventListener extends ListenerAdapter {
     public void onMessageReceived(MessageReceivedEvent event) {
         String message = event.getMessage().getContentDisplay();
         User author = event.getAuthor();
-        if (author == null || author.isBot() || message == null || StringUtils.isBlank(message)) {
+        if (author == null || author.isBot() || StringUtils.isBlank(message) || event.getGuild() == null || event.getMember() == null) {
             return;
         }
         handleEvent(event);

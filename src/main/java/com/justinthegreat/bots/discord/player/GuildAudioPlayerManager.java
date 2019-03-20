@@ -1,9 +1,9 @@
 package com.justinthegreat.bots.discord.player;
 
-import com.justinthegreat.bots.discord.audio.AudioSendHandlerImpl;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
+import com.sedmelluq.discord.lavaplayer.source.local.LocalAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
@@ -13,7 +13,6 @@ import gnu.trove.map.hash.TLongObjectHashMap;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.VoiceChannel;
-import net.dv8tion.jda.core.managers.AudioManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +26,12 @@ import java.util.concurrent.atomic.AtomicReference;
 public class GuildAudioPlayerManager extends DefaultAudioPlayerManager {
     private static final long CHECK_INTERVAL = TimeUnit.SECONDS.toMillis(10);
     private static final long DEFAULT_CLEANUP_THRESHOLD = TimeUnit.SECONDS.toMillis(30);
+    private static final GuildAudioPlayerManager AUDIO_PLAYER_MANAGER = new GuildAudioPlayerManager();
+
+    static {
+        AudioSourceManagers.registerRemoteSources(AUDIO_PLAYER_MANAGER);
+        AUDIO_PLAYER_MANAGER.registerSourceManager(new LocalAudioSourceManager());
+    }
 
     private final Logger logger = LoggerFactory.getLogger(GuildAudioPlayerManager.class);
     private final ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1, new DaemonThreadFactory("manager"));
@@ -34,9 +39,13 @@ public class GuildAudioPlayerManager extends DefaultAudioPlayerManager {
 
     private TLongObjectHashMap<GuildAudioPlayer> players = new TLongObjectHashMap<>();
 
-    public GuildAudioPlayerManager() {
+    private GuildAudioPlayerManager() {
         super();
         lifecycleManager.initialise();
+    }
+
+    public static GuildAudioPlayerManager getInstance() {
+        return AUDIO_PLAYER_MANAGER;
     }
 
     @Override
@@ -56,28 +65,21 @@ public class GuildAudioPlayerManager extends DefaultAudioPlayerManager {
             player = new GuildAudioPlayer(createPlayer(), guild);
             players.put(guild.getIdLong(), player);
         }
-        // player.addListener(new AudioEventAdapter() {});
         return player;
     }
 
     public Future<Void> loadItem(String identifier, Guild guild, VoiceChannel voiceChannel, MessageChannel channel) {
-        AudioPlayer player = getAudioPlayer(guild);
-        AudioManager manager = guild.getAudioManager();
+        GuildAudioPlayer player = getAudioPlayer(guild);
         return super.loadItem(identifier, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
-                manager.setSendingHandler(new AudioSendHandlerImpl(player));
-                if (manager.getConnectedChannel() == null || manager.getConnectedChannel().getIdLong() != voiceChannel.getIdLong()) {
-                    manager.openAudioConnection(voiceChannel);
-                }
-                player.playTrack(track);
-                if (player.isPaused()) {
-                    player.setPaused(false);
-                }
+                player.trackLoaded(track, voiceChannel);
             }
 
             @Override
             public void playlistLoaded(AudioPlaylist playlist) {
+                // TODO: Implement this
+                logger.info("Got a playlist loaded: " + playlist);
             }
 
             @Override

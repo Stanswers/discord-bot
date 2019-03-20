@@ -1,11 +1,13 @@
-package com.justinthegreat.bots.discord;
+package com.justinthegreat.bots.discord.player;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,9 +30,11 @@ public class SoundBoard {
             }
         }
         if (!keywordToSfxPath.isEmpty()) {
-            Set<String> keywords = keywordToSfxPath.keySet();
-            availableSounds = Arrays.toString(keywords.toArray());
-            pattern = Pattern.compile(".*(" + String.join("|", keywords) + ").*");
+            List<String> keywords = new ArrayList<>(keywordToSfxPath.keySet());
+            availableSounds = keywords.toString();
+            Collections.reverse(keywords);
+            String kwds = String.join("|", keywords);
+            pattern = Pattern.compile("((" + kwds + ")(?!" + kwds + ")+)+", Pattern.CASE_INSENSITIVE);
         }
     }
 
@@ -42,11 +46,15 @@ public class SoundBoard {
         return keywordToSfxPath.get(keyword);
     }
 
-    public String fuck(String message) {
+    public List<String> getSfxPathsFromMessage(String message) {
         Matcher matcher = pattern.matcher(message);
-        if (matcher.matches()) {
-            return keywordToSfxPath.get(matcher.group(0));
+        List<String> results = new ArrayList<>();
+        while (matcher.find()) {
+            String path = keywordToSfxPath.get(matcher.group().toLowerCase());
+            if (StringUtils.isNotBlank(path)) {
+                results.add(path);
+            }
         }
-        return null;
+        return results;
     }
 }

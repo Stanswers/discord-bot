@@ -9,9 +9,9 @@ public class KillDashNine extends PlayAudioEventHandler {
     }
 
     @Override
-    protected boolean handleNonAudioEvent(MessageReceivedEvent event, String[] args) {
-        if (args.length >= 2 && "help".equals(args[0])) {
-            event.getChannel().sendMessage("```killdashnine|kill -9```").queue();
+    public boolean handleHelpEvent(MessageReceivedEvent event, String[] args) {
+        if ("help".equals(args[1])) {
+            event.getChannel().sendMessage("```" + CommandEventListener.PREFIX + "killdashnine|kill -9```").queue();
             return true;
         }
         return false;
@@ -24,6 +24,6 @@ public class KillDashNine extends PlayAudioEventHandler {
 
     @Override
     public String getShortName() {
-        return "killdashnine";
+        return "kill";
     }
 }
