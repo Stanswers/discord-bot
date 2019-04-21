@@ -25,7 +25,7 @@ public class SoundBoard {
             for (File file : sbDir.listFiles()) {
                 if (file.isFile() && FilenameUtils.isExtension(file.getName(), SUPPORTED_EXTENSIONS)) {
                     String keyword = FilenameUtils.removeExtension(file.getName());
-                    keywordToSfxPath.put(keyword, file.getAbsolutePath());
+                    keywordToSfxPath.put(keyword.toLowerCase(), file.getAbsolutePath());
                 }
             }
         }

@@ -12,6 +12,8 @@ import net.dv8tion.jda.core.managers.AudioManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ExecutionException;
+
 public class SoundBoardEventListener extends EventListener {
     private final Logger logger = LoggerFactory.getLogger(SoundBoardEventListener.class);
     private final SoundBoard soundBoard;
@@ -39,7 +41,11 @@ public class SoundBoardEventListener extends EventListener {
         }
         for (String result : soundBoard.getSfxPathsFromMessage(msg)) {
             logger.debug(result);
-            GuildAudioPlayerManager.getInstance().loadItem(result, guild, voiceChannel, channel);
+            try {
+                GuildAudioPlayerManager.getInstance().loadItem(result, guild, voiceChannel, channel).get();
+            } catch (InterruptedException | ExecutionException e) {
+                logger.error("Caught Exception While Attempting to load item [" + result + "]", e);
+            }
         }
         return;
     }
