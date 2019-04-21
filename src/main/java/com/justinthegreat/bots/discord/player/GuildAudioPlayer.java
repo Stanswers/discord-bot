@@ -26,6 +26,7 @@ public class GuildAudioPlayer implements AudioPlayer {
 
     public GuildAudioPlayer(AudioPlayer player, Guild guild) {
         this.player = player;
+        setDefaultVolume();
         this.guild = guild;
         this.addListener(new AudioEventAdapter() {
             @Override
@@ -143,6 +144,10 @@ public class GuildAudioPlayer implements AudioPlayer {
     @Override
     public void setVolume(int volume) {
         player.setVolume(volume);
+    }
+
+    public void setDefaultVolume() {
+        player.setVolume(20);
     }
 
     @Override

@@ -7,6 +7,7 @@ import com.justinthegreat.bots.discord.command.Pause;
 import com.justinthegreat.bots.discord.command.Play;
 import com.justinthegreat.bots.discord.command.SoundBoardCommand;
 import com.justinthegreat.bots.discord.command.Stop;
+import com.justinthegreat.bots.discord.command.Volume;
 import com.justinthegreat.bots.discord.listeners.MessageReceivedEventLogger;
 import com.justinthegreat.bots.discord.listeners.SoundBoardEventListener;
 import com.justinthegreat.bots.discord.player.SoundBoard;
@@ -24,7 +25,7 @@ public class Main {
             SoundBoard sb = new SoundBoard(args[1]);
             JDABuilder builder = new JDABuilder(args[0]);
             builder.addEventListener(new MessageReceivedEventLogger());
-            builder.addEventListener(new CommandEventListener(new SoundBoardCommand(sb), new KillDashNine(), new Play(), new Pause(), new Stop(), new Next()));
+            builder.addEventListener(new CommandEventListener(new SoundBoardCommand(sb), new KillDashNine(), new Play(), new Pause(), new Stop(), new Next(), new Volume()));
             builder.addEventListener(new SoundBoardEventListener(sb));
             builder.build().awaitReady();
         } catch (InterruptedException | LoginException e) {
