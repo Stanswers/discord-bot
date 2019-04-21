@@ -1,7 +1,7 @@
 package com.justinthegreat.bots.discord.command;
 
-import com.justinthegreat.bots.discord.BotRuntime;
-import net.dv8tion.jda.core.entities.Guild;
+import com.justinthegreat.bots.discord.player.GuildAudioPlayer;
+import com.justinthegreat.bots.discord.player.GuildAudioPlayerManager;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 
 public class Pause implements CommandEventHandler {
@@ -17,10 +17,16 @@ public class Pause implements CommandEventHandler {
 
     @Override
     public void handleEvent(MessageReceivedEvent event, String[] args) {
-        Guild guild = event.getGuild();
-        if (guild == null) {
-            return;
+        GuildAudioPlayer player = GuildAudioPlayerManager.getInstance().getAudioPlayer(event.getGuild());
+        player.setPaused(!player.isPaused(), event.getMember().getVoiceState().getChannel());
+    }
+
+    @Override
+    public boolean handleHelpEvent(MessageReceivedEvent event, String[] args) {
+        if ("help".equals(args[1])) {
+            event.getChannel().sendMessage("```" + CommandEventListener.PREFIX + "pa [help]```").queue();
+            return true;
         }
-        BotRuntime.getInstance().getAudioPlayer(guild).setPaused(true);
+        return false;
     }
 }

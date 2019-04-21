@@ -1,4 +1,4 @@
-package com.justinthegreat.bots.discord.audio;
+package com.justinthegreat.bots.discord.player;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;
@@ -28,6 +28,7 @@ public class AudioSendHandlerImpl implements AudioSendHandler {
             frame = player.provide();
         } catch (UnsupportedOperationException e) {
             // For some reason the last frame of a local file throws this exception
+            frame = null;
             return false;
         }
         return frame != null;
