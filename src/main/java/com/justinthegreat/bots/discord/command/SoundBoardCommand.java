@@ -1,7 +1,7 @@
 package com.justinthegreat.bots.discord.command;
 
 import com.justinthegreat.bots.discord.player.SoundBoard;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 import java.util.Arrays;
 

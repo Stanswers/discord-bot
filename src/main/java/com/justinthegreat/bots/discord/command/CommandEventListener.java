@@ -1,7 +1,7 @@
 package com.justinthegreat.bots.discord.command;
 
 import com.justinthegreat.bots.discord.listeners.EventListener;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;

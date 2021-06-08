@@ -2,7 +2,10 @@ package com.justinthegreat.bots.discord.player;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;
-import net.dv8tion.jda.core.audio.AudioSendHandler;
+import net.dv8tion.jda.api.audio.AudioSendHandler;
+import org.jetbrains.annotations.Nullable;
+
+import java.nio.ByteBuffer;
 
 public class AudioSendHandlerImpl implements AudioSendHandler {
     private final AudioPlayer player;
@@ -12,9 +15,10 @@ public class AudioSendHandlerImpl implements AudioSendHandler {
         this.player = player;
     }
 
+    @Nullable
     @Override
-    public byte[] provide20MsAudio() {
-        return frame.getData();
+    public ByteBuffer provide20MsAudio() {
+        return ByteBuffer.wrap(frame.getData());
     }
 
     @Override
